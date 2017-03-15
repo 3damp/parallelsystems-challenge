@@ -4,17 +4,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_DSL_SUPPORT"/>
-	<classpathentry kind="lib" path="H:/eclipseB56-2/UCaPE-J8-G2.4-14102016/GroovyParallel-Groovy2.4-14102016.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="file:/C:/UCaPE-J8-G2.4-14102016/GPdocs-14102016/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="H:/eclipseB56-2/UCaPE-J8-G2.4-14102016/JCSP-Java8-14102016.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="file:/C:/UCaPE-J8-G2.4-14102016/JCSPdocs-14102016/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="H:/eclipseB56-2/UCaPE-J8-G2.4-14102016/junit.jar"/>
-	<classpathentry kind="lib" path="H:/eclipseB56-2/UCaPE-J8-G2.4-14102016/phwclasses.jar"/>
+	<classpathentry kind="lib" path="lib/GroovyParallel-Groovy2.4-14102016.jar"/>
+	<classpathentry kind="lib" path="lib/JCSP-Java8-14102016.jar"/>
+	<classpathentry kind="lib" path="lib/junit.jar"/>
+	<classpathentry kind="lib" path="lib/phwclasses.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
