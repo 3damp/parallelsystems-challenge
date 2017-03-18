@@ -231,7 +231,7 @@ class ControllerManager implements CSProcess{
 						if (currentPair[1] != null){
 							//if it matches					
 							def timer = new CSTimer()
-							if (pairsMap.get(currentPair[0]) != null && pairsMap.get(currentPair[0]) == pairsMap.get(currentPair[1])) {
+							if (pairsMap.get(currentPair[0]) != null && currentPair[0]!=currentPair[1] && pairsMap.get(currentPair[0]) == pairsMap.get(currentPair[1])) {
 								// pair can be claimed
 								//println "before remove of $p1, $p2"
 								//pairsMap.each {println "$it"}
@@ -255,6 +255,8 @@ class ControllerManager implements CSProcess{
 							timer.sleep(1000)
 							currentPair = [null, null]	
 						}
+					}else if(id != currentPlayer){
+						
 					}	
 				} else {
 					def withdraw = (WithdrawFromGame)o

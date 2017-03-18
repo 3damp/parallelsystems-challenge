@@ -206,11 +206,12 @@ class PlayerManager implements CSProcess {
 							break						
 						case VALIDPOINT:
 							def vPoint = ((SquareCoords)validPoint.read()).location
+							println "Card selected: $vPoint"
 							chosenPairs[currentPair] = vPoint
 							
 							toController.write(new ClaimCard ( id: myPlayerId,
 											   	   			   gameId: gameId,
-															   card: chosenPairs[currentPair]))
+															   card: vPoint))
 							
 							currentPair = currentPair + 1
 							def pairData = pairsMap.get(vPoint)
