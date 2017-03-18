@@ -4,6 +4,7 @@ So far, every basics requirements seems to be fulfill.
 * Players can join and withdraw at any time.
 * Board is redraw after a move
 * Players can see the flipped card in real time, but can't play if it's not their turn
+* Any IPs used by the machine are listened (use of the IP 0.0.0.0)
 
 ## TODO List
 
