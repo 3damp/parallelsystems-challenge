@@ -6,6 +6,8 @@ import org.jcsp.util.*
 import org.jcsp.groovy.*
 import java.awt.*
 import java.awt.Color.*
+import java.util.concurrent.ConcurrentSkipListMap.KeySet
+
 import org.jcsp.net2.*;
 import org.jcsp.net2.tcpip.*;
 import org.jcsp.net2.mobile.*;
@@ -42,6 +44,10 @@ class ControllerManager implements CSProcess{
 		int pairsRange = maxPairs - minPairs
 		
 		def availablePlayerIds = ((maxPlayers-1) .. 0).collect{it}
+		def allocatedPlayerIds = []
+		
+		def currentPlayer = 0
+		def currentPair = [null, null]
 		
 		//println "$availablePlayerIds"
 		def generatePairsNumber = { min, range ->
@@ -150,7 +156,7 @@ class ControllerManager implements CSProcess{
 		} // end createPairs
 		
 		// create a Node and the fromPlayers net channel
-		def nodeAddr = new TCPIPNodeAddress (3000)
+		def nodeAddr = new TCPIPNodeAddress ("0.0.0.0", 3000)
 		Node.getInstance().init (nodeAddr)
 		IPlabelConfig.write(nodeAddr.getIpAddress())
 		//println "Controller IP address = ${nodeAddr.getIpAddress()}"
@@ -189,6 +195,7 @@ class ControllerManager implements CSProcess{
 					//println "name: ${playerDetails.name}"
 					if (availablePlayerIds.size() > 0) {
 						currentPlayerId = availablePlayerIds. pop()
+						allocatedPlayerIds << currentPlayerId
 						playerNames[currentPlayerId].write(playerName)
 						pairsWon[currentPlayerId].write(" " + 0)
 						toPlayers[currentPlayerId] = playerToChan 
@@ -204,32 +211,49 @@ class ControllerManager implements CSProcess{
 					def id = ggd.id
 					toPlayers[id].write(new GameDetails( playerDetails: playerMap,
 													 	 pairsSpecification: pairsMap,
-														 gameId: gameId))
-				} else if ( o instanceof ClaimPair) {
-					def claimPair = (ClaimPair)o
-					def gameNo = claimPair.gameId
-					def id = claimPair.id
-					def p1 = claimPair.p1
-					def p2 = claimPair.p2
-					if ( gameId == gameNo){
-						if ((pairsMap.get(p1) != null) ) {
-							// pair can be claimed
-							//println "before remove of $p1, $p2"
-							//pairsMap.each {println "$it"}
-							pairsMap.remove(p2)
-							pairsMap.remove(p1)
-							//println "after remove of $p1, $p2"
-							//pairsMap.each {println "$it"}
-							def playerState = playerMap.get(id)
-							playerState[1] = playerState[1] + 1
-							pairsWon[id].write(" " + playerState[1])
-							playerMap.put(id, playerState)
-							pairsUnclaimed = pairsUnclaimed - 1
-							pairsConfig.write(" "+ pairsUnclaimed)
-							running = (pairsUnclaimed != 0)
-						} 
-						else {
-							//println "cannot claim pair: $p1, $p2"
+														 gameId: gameId,
+														 currentPlayer: currentPlayer,
+														 currentDisplay: currentPair))
+				} else if ( o instanceof ClaimCard) {
+					def claimCard = (ClaimCard)o
+					def gameNo = claimCard.gameId
+					def id = claimCard.id
+					if ( gameId == gameNo && id == currentPlayer){
+						//notify all the player about the flip
+						playerMap.each{ k, v ->
+							if (k != currentPlayer){
+//								println "sending card ${currentPair[0] == null ? 0 : 1} to ${k}"
+								toPlayers[k].write(claimCard)
+							}
+						}
+						currentPair[currentPair[0] == null ? 0 : 1] = claimCard.card
+						
+						if (currentPair[1] != null){
+							//if it matches					
+							def timer = new CSTimer()
+							if (pairsMap.get(currentPair[0]) != null && pairsMap.get(currentPair[0]) == pairsMap.get(currentPair[1])) {
+								// pair can be claimed
+								//println "before remove of $p1, $p2"
+								//pairsMap.each {println "$it"}
+								pairsMap.remove(currentPair[0])
+								pairsMap.remove(currentPair[1])
+								//println "after remove of $p1, $p2"
+								//pairsMap.each {println "$it"}
+								def playerState = playerMap.get(id)
+								playerState[1] = playerState[1] + 1
+								pairsWon[id].write(" " + playerState[1])
+								playerMap.put(id, playerState)
+								pairsUnclaimed = pairsUnclaimed - 1
+								pairsConfig.write(" "+ pairsUnclaimed)
+								running = (pairsUnclaimed != 0)
+							} 
+							//otherwise
+							else {
+								currentPlayer = allocatedPlayerIds[(allocatedPlayerIds.indexOf(currentPlayer) + 1) % allocatedPlayerIds.size()]
+//								println "Current player #${(allocatedPlayerIds.indexOf(currentPlayer) + 1) % allocatedPlayerIds.size()}: ${currentPlayer}"
+							}
+							timer.sleep(1000)
+							currentPair = [null, null]	
 						}
 					}	
 				} else {
@@ -242,6 +266,18 @@ class ControllerManager implements CSProcess{
 					toPlayers[id] = null
 					availablePlayerIds << id
 					availablePlayerIds =  availablePlayerIds.sort().reverse()
+					
+					playerMap.remove(id)					
+					
+					if (id == currentPlayer){						
+						playerMap.each{ k, v ->
+							if (k != currentPlayer){
+								toPlayers[k].write(-1)
+							}
+						}
+						currentPlayer = allocatedPlayerIds[(allocatedPlayerIds.indexOf(currentPlayer) + 1) % allocatedPlayerIds.size()]
+					}
+					allocatedPlayerIds.remove(id)
 				} // end else if chain
 			} // while running
 			createBoard()
